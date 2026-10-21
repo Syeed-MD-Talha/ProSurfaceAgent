@@ -10,7 +10,7 @@ The assistant is designed to ground answers in the project's skills, knowledge-b
 
 ## Contents
 
-[Capabilities](#capabilities) · [Architecture](#architecture) · [Quick start](#quick-start) · [Configuration](#configuration) · [Owner confirmation](#owner-confirmation) · [Knowledge and pricing](#knowledge-and-pricing) · [Project layout](#project-layout) · [HTTP interface](#http-interface) · [State and privacy](#state-and-privacy) · [Verification](#verification) · [Deployment](#deployment) · [Current limits](#current-limits)
+[Capabilities](#capabilities) · [Architecture](#architecture) · [Two-server workspace](#two-server-workspace) · [Quick start](#quick-start) · [Configuration](#configuration) · [Owner confirmation](#owner-confirmation) · [Knowledge and pricing](#knowledge-and-pricing) · [Project layout](#project-layout) · [HTTP interface](#http-interface) · [State and privacy](#state-and-privacy) · [Verification](#verification) · [Deployment](#deployment) · [Current limits](#current-limits)
 
 ## Capabilities
 
@@ -32,6 +32,54 @@ The assistant is designed to ground answers in the project's skills, knowledge-b
 Included knowledge covers marble and stone care, parquet flooring, vinyl flooring, wood decking, grout work, timber repair, broken-marble polishing, and general floor care.
 
 ## Architecture
+
+### Two-server workspace
+
+The full local workspace runs **two separate servers**. This GitHub repository contains the QA Agent application; the Admin Agent is maintained separately in the parent workspace.
+
+| Server | Audience and role | Runtime | Default local address |
+| --- | --- | --- | --- |
+| **Admin Agent** (`Admin_agent/`) | The business owner's coding assistant. Reads and updates the QA project, runs checks, and restarts the QA server under the workspace instructions. | Node.js / TypeScript, Pi harness | `http://127.0.0.1:3100` |
+| **QA Agent** (`QA_agent/`) | The customer-facing ProSurface assistant. Handles chat, attachments, pricing, bookings, owner notifications, and owner reply pages. | Python | `http://127.0.0.1:8000` |
+
+```mermaid
+flowchart LR
+    Admin[Business owner] --> AdminUI[Admin Agent: port 3100]
+    AdminUI --> Files[QA project files]
+    AdminUI --> Maintain[Checks and QA server restart]
+    Files --> QA[QA Agent: port 8000]
+    Maintain --> QA
+    Customer[Customer browser] --> QA
+    Owner[Owner email reply link] --> QA
+```
+
+The Admin Agent manages the QA application through local files and commands. Customer conversations run inside the QA server and can operate while the Admin server is stopped. Owner reply pages and the email worker also belong to the QA server.
+
+Keep access to the Admin Agent restricted to trusted administrators: it can edit files and execute commands. Both servers use loopback addresses by default; public customer access should be routed to the QA application through an HTTPS reverse proxy.
+
+#### Start both servers in the existing Windows workspace
+
+The parent workspace has this layout:
+
+```text
+Autonomous Agent/
+├── AGENTS.md             # Admin operating instructions
+├── start_admin.bat       # Starts QA, then opens the Admin web UI
+├── Admin_agent/          # Separate Node.js project
+└── QA_agent/             # This repository's application
+```
+
+With both projects and their dependencies already installed, double-click `start_admin.bat`, or run it from the parent folder in PowerShell:
+
+```powershell
+.\start_admin.bat
+```
+
+The launcher checks QA health, starts it if needed, and opens the Admin Agent web UI on port `3100`. It starts the Admin Agent with the parent workspace as its working directory so the agent can follow `AGENTS.md` and maintain `QA_agent/`.
+
+The parent launcher and Admin project are supplied by that workspace. Cloning this repository gives you the standalone QA application; use the quick start below to run it independently. The separate Admin Agent requires Node.js **22.19 or newer** and its own dependency installation and configuration.
+
+### Customer question workflow
 
 ```mermaid
 flowchart TD
