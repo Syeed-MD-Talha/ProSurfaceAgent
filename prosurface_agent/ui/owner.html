@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>Reply to a customer · ProSurface</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fafbf8;color:#183d34;font-family:Segoe UI,Arial,sans-serif;line-height:1.65}header{background:#163f35;color:#f0f4e8;padding:24px max(24px,calc((100vw - 720px)/2));font-size:20px}main{max-width:720px;margin:40px auto;padding:0 22px 40px}h1{font-family:Georgia,serif;font-size:34px;line-height:1.2;font-weight:400}.muted{color:#748079;font-size:14px}.card{border:1px solid #dfe7dc;background:white;border-radius:14px;padding:24px;margin:22px 0}.eyebrow{font-size:11px;letter-spacing:1.3px;text-transform:uppercase;color:#748079}.copy{white-space:pre-wrap;overflow-wrap:anywhere}details{font-size:13px;color:#5b6e61;margin-top:20px}summary{cursor:pointer}textarea{display:block;width:100%;min-height:160px;margin:10px 0 16px;border:1px solid #b6c7ad;border-radius:10px;padding:14px;font:inherit;color:#183d34;resize:vertical}button{background:#245746;color:white;border:0;border-radius:9px;padding:13px 20px;font:inherit;cursor:pointer}button:disabled{opacity:.5;cursor:default}:focus-visible{outline:3px solid #9bbc88;outline-offset:3px}#status{padding:14px 0;white-space:pre-wrap}label{font-weight:600}[hidden]{display:none!important}
+</style></head><body><header>ProSurface Works · Owner reply</header><main><p class="eyebrow">Customer confirmation</p><h1>Give your customer a clear answer.</h1><p class="muted">This private link is for one customer question. Your answer will appear in their chat as written.</p><div id="status" role="status">Opening question…</div><section id="questionCard" class="card" hidden><div class="eyebrow">Customer asked</div><p class="copy" id="clientQuestion"></p><div class="eyebrow">Please confirm</div><p class="copy" id="ownerQuestion"></p><details><summary>View recent conversation</summary><p class="copy" id="context"></p></details></section><form id="replyForm" hidden><label for="answer">Your answer to the customer</label><textarea id="answer" maxlength="4000" required placeholder="Write the exact answer the customer should receive."></textarea><button id="send" type="submit">Send answer to customer</button><p class="muted">One answer per link. You can close this page once the answer is sent.</p></form><section id="sentCard" class="card" hidden><div class="eyebrow">Answer sent</div><p class="copy" id="sentAnswer"></p></section></main>
+<script>
+const $=id=>document.getElementById(id);
+const token=new URLSearchParams(location.hash.slice(1)).get('token')||'';
+history.replaceState(null,'',location.pathname);
+const headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'};
+let sending=false;
+async function loadQuestion(){
+  try{
+    if(!token)throw new Error('Open the private reply link from the notification email.');
+    const response=await fetch('/api/owner/question',{headers,cache:'no-store'});
+    const data=await response.json();
+    if(!response.ok)throw new Error(data.error||'This question is unavailable.');
+    const q=data.question;
+    $('clientQuestion').textContent=q.client_question;
+    $('ownerQuestion').textContent=q.owner_question;
+    $('context').textContent=q.context||'No additional conversation.';
+    $('questionCard').hidden=false;
+    const answered=q.status==='answered';
+    $('replyForm').hidden=answered;
+    $('sentCard').hidden=!answered;
+    $('sentAnswer').textContent=q.answer||'';
+    $('status').textContent=answered?'Your answer has been delivered to this customer’s chat.':'';
+  }catch(error){$('status').textContent=error.message;$('replyForm').hidden=true;}
+}
+$('replyForm').onsubmit=async event=>{
+  event.preventDefault();if(sending)return;
+  const answer=$('answer').value.trim();if(!answer)return;
+  sending=true;$('send').disabled=true;$('status').textContent='Sending your answer…';
+  try{
+    const response=await fetch('/api/owner/answer',{method:'POST',headers,body:JSON.stringify({answer})});
+    const result=await response.json();
+    if(response.status===409){await loadQuestion();return;}
+    if(!response.ok)throw new Error(result.error||'The answer could not be sent.');
+    await loadQuestion();
+  }catch(error){$('status').textContent=error.message==='Failed to fetch'?'Connection interrupted. Your answer is still here; try sending it again.':error.message;}
+  finally{sending=false;$('send').disabled=false;}
+};
+loadQuestion();
+</script></body></html>

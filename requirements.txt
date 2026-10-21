@@ -1,0 +1,10 @@
+openai>=1.0.0
+python-dotenv>=1.0.0
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+ddgs>=9.0.0
+tzdata>=2024.1
+pypdf>=4.0.0  # PDF text extraction (web uploads)
+pymupdf>=1.24.0  # PDF rendering for screenshot pages (vision reading)
+pytest>=8.0.0  # `python -m pytest tests/` (or stdlib: `python -m unittest discover -s tests`)
+dotenv>=1.0.0  # `python -m dotenv` for loading .env files

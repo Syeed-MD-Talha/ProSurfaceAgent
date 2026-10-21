@@ -1,0 +1,86 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Credentials and machine-specific environment settings
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+*credentials*.json
+*service-account*.json
+secrets.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Preserve curated skills and exclude all other local agent state.
+/.prosurface-agent/*
+!/.prosurface-agent/skills/
+/.prosurface-agent/skills/.archive/
+/.prosurface-agent/skills/.usage.json
+/.prosurface-agent/skills/**/.usage.json
+/.mini-hermes/
+
+# Databases, journals, logs and process files, wherever created
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.log
+*.log.*
+*.pid
+
+# Test / lint output and disposable verification directories
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.*-tmp/
+.test-tmp/
+.publish-check/
+
+# Generated user workspace
+workspace/
